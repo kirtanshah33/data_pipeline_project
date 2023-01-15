@@ -1,1 +1,4 @@
 configparser
+pymysql
+cryptography
+delta-spark==2.2.0
