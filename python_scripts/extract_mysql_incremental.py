@@ -11,7 +11,7 @@ builder = pyspark.sql.SparkSession.builder.appName("MyApp") \
 spark = configure_spark_with_delta_pip(builder).getOrCreate()
 
 last_record_sql = """SELECT COALESCE(MAX(LastUpdated), '1900-01-01')
-    FROM delta.`/opt/application/delta_tables/orders`;"""
+    FROM delta.`/opt/application/spark-warehouse/orders`;"""
 result = spark.sql(last_record_sql).first()
 # # there's only one row and column returned
 last_updated_warehouse = result[0]
@@ -55,27 +55,26 @@ m_cursor.close()
 conn.close()
 
 
-# # load the aws_boto_credentials values
-# parser = configparser.ConfigParser()
-# parser.read("pipeline.conf")
-# access_key = parser.get(
-#     "aws_boto_credentials",
-#     "access_key")
-# secret_key = parser.get(
-#     "aws_boto_credentials",
-#     "secret_key")
-# bucket_name = parser.get(
-#     "aws_boto_credentials",
-#     "bucket_name")
+from pyspark.sql.types import StructType, IntegerType, StringType,StructField,TimestampType
 
-# s3 = boto3.client(
-#     's3',
-#     aws_access_key_id=access_key,
-#     aws_secret_access_key=secret_key)
+schema = StructType([
+    StructField("OrderId", IntegerType()),
+    StructField("OrderStatus", StringType()),
+    StructField("LastUpdated", TimestampType())
+])
 
-# s3_file = local_filename
+csv_df = (
+    spark.read.format("csv")
+    .option("sep", "|")
+    .schema(schema)
+    .load("/opt/application/order_extract.csv")
+)
+# csv_df.show()
 
-# s3.upload_file(
-#     local_filename,
-#     bucket_name,
-#     s3_file)
+csv_df.write.format("delta").mode("append").saveAsTable(
+    "delta.`/opt/application/spark-warehouse/orders`"
+)
+
+df = spark.read.format("delta").load("/opt/application/spark-warehouse/orders")
+print(df.printSchema)
+df.show()
