@@ -1,6 +1,7 @@
 envfiles
 *.log
 *.csv
+*.conf
 metastore_db
 spark-warehouse
 delta_tables
