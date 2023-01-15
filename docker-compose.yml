@@ -3,8 +3,6 @@ version: '2'
 services:
   mysql-db:
     image: mysql
-    stdin_open: true # docker run -i
-    tty: true     # docker run -t
     # restart: always
     env_file:
       - "./envfiles/mysql.env"
@@ -17,6 +15,14 @@ services:
       # Where our data will be persisted
     volumes:
       - my-db:/var/lib/mysql
+  pyspark:
+    build: ./
+    stdin_open: true # docker run -i
+    tty: true     # docker run -t
+    volumes:
+      - ./:/opt/application
+    depends_on:
+      - mysql-db
 # Names our volume
 volumes:
   my-db:

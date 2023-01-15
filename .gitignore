@@ -1,1 +1,6 @@
 envfiles
+*.log
+*.csv
+metastore_db
+spark-warehouse
+delta_tables
